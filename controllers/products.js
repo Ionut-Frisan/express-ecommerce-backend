@@ -1,9 +1,12 @@
 const Product = require("../models/Product");
+const Category = require("../models/Category");
+
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 /**
  * @desc    Get all products
  * @route   GET api/v1/products
+ * @route   GET api/v1/categories/:categoryId/products
  * @access  Public
  */
 exports.getProducts = asyncHandler(async (req, res, next) => {
@@ -28,7 +31,16 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
     (match) => `$${match}`
   );
 
-  query = Product.find(JSON.parse(queryStr));
+  console.log(`queryStr: ${queryStr}`.green.inverse);
+
+  if (req.params.categoryId) {
+    query = Product.find({
+      ...JSON.parse(queryStr),
+      category: req.params.categoryId,
+    });
+  } else {
+    query = Product.find(JSON.parse(queryStr)).populate("category"); // .populate({ path: 'category', select: 'name slug'});
+  }
 
   // Select Fields
   if (req.query.select) {
@@ -88,7 +100,7 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
   const product = await Product.findById(req.params.id);
   if (!product) {
     return next(
-      new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
+      new ErrorResponse(`Product not found with id of ${req.params.id}`, 404)
     );
   }
   res.status(200).json({ success: true, data: product });
@@ -100,6 +112,15 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 exports.createProduct = asyncHandler(async (req, res, next) => {
+  const category = Category.findById(req.body.category);
+  if (!category) {
+    return next(
+      new ErrorResponse(
+        `Category not found with id of ${req.body.category}`,
+        404
+      )
+    );
+  }
   const product = await Product.create(req.body);
   res.status(201).json({ success: true, data: product });
 });
@@ -117,7 +138,7 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
 
   if (!product) {
     return next(
-      new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
+      new ErrorResponse(`Product not found with id of ${req.params.id}`, 404)
     );
   }
 
@@ -134,7 +155,7 @@ exports.deleteProduct = asyncHandler(async (req, res, next) => {
 
   if (!product) {
     return next(
-      new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
+      new ErrorResponse(`Product not found with id of ${req.params.id}`, 404)
     );
   }
 

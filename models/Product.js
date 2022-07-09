@@ -22,6 +22,11 @@ const ProductSchema = new mongoose.Schema({
     maxLength: [50, "Name cannot be more than 50 characters"],
   },
   slug: String,
+  category: {
+    type: mongoose.Schema.ObjectId,
+    ref: "Category",
+    required: true,
+  },
   description: {
     type: String,
     required: [true, "Description is required"],
@@ -61,6 +66,13 @@ const ProductSchema = new mongoose.Schema({
 // Create Product slug from the name
 ProductSchema.pre("save", function (next) {
   this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+// Update Product slug when name is updated
+ProductSchema.pre("findOneAndUpdate", function (next) {
+  if (this._update.name);
+  this._update.slug = slugify(this._update.name, { lower: true });
   next();
 });
 
