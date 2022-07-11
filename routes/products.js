@@ -6,6 +6,8 @@ const advancedResults = require("../middleware/advancedResults");
 // Import Model
 const Product = require("../models/Product");
 
+const { protect, authorize } = require("../middleware/auth");
+
 const {
   getProduct,
   getProducts,
@@ -20,8 +22,12 @@ const router = express.Router({ mergeParams: true });
 router
   .route("/")
   .get(/*advancedResults(Product, "category"),*/ getProducts)
-  .post(createProduct);
-router.route("/:id").get(getProduct).put(updateProduct).delete(deleteProduct);
-router.route("/:id/photo").put(productUploadPhoto);
+  .post(protect, authorize("admin"), createProduct);
+router
+  .route("/:id")
+  .get(getProduct)
+  .put(protect, authorize("admin"), updateProduct)
+  .delete(protect, authorize("admin"), deleteProduct);
+router.route("/:id/photo").put(protect, authorize("admin"), productUploadPhoto);
 
 module.exports = router;
