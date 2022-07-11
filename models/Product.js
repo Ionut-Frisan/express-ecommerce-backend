@@ -71,8 +71,8 @@ ProductSchema.pre("save", function (next) {
 
 // Update Product slug when name is updated
 ProductSchema.pre("findOneAndUpdate", function (next) {
-  if (this._update.name);
-  this._update.slug = slugify(this._update.name, { lower: true });
+  if (this._update.name)
+    this._update.slug = slugify(this._update.name, { lower: true });
   next();
 });
 
