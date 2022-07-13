@@ -17,7 +17,11 @@ const {
   productUploadPhoto,
 } = require("../controllers/products");
 
+const reviewRouter = require("./reviews");
+
 const router = express.Router({ mergeParams: true });
+
+router.use("/:productId/reviews", reviewRouter);
 
 router
   .route("/")

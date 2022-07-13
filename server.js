@@ -10,6 +10,8 @@ const errorHandler = require("./middleware/error");
 const products = require("./routes/products");
 const categories = require("./routes/categories");
 const auth = require("./routes/auth");
+const users = require("./routes/users");
+const reviews = require("./routes/reviews");
 
 require("dotenv").config({ path: "./config/config.env" });
 
@@ -42,6 +44,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api/v1/products", products);
 app.use("/api/v1/categories", categories);
 app.use("/api/v1/auth", auth);
+app.use("/api/v1/users", users);
+app.use("/api/v1/reviews", reviews);
 
 app.use(errorHandler);
 const server = app.listen(PORT, () =>
