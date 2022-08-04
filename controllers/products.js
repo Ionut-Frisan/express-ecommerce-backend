@@ -125,6 +125,36 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
     );
   }
   const product = await Product.create(req.body);
+
+  const saveFile = (file) => {
+    if (
+      file.mimetype.startsWith("image") &&
+      file.size <= process.env.MAX_FILE_UPLOAD
+    ) {
+      file.name = `photo_${product.id}${path.parse(file.name).ext}`;
+      file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
+        if (err) {
+          return next(
+            new ErrorResponse("Something went wrong when saving a file", 500)
+          );
+        }
+      });
+      namesArr.push(file.name);
+    }
+  };
+
+  let namesArr = [];
+  if (req.files?.images) {
+    let files = req.files.images;
+    console.log(typeof files);
+    if (Array.isArray(files)) for (const file of files) saveFile(file);
+    else saveFile(files);
+  }
+  console.log(namesArr);
+  if (namesArr && product) {
+    product.images = namesArr;
+    await product.save();
+  }
   res.status(201).json({ success: true, data: product });
 });
 
@@ -208,7 +238,7 @@ exports.productUploadPhoto = asyncHandler(async (req, res, next) => {
       return next(new ErrorResponse(`Problem with file upload`, 500));
     }
 
-    await Product.findByIdAndUpdate(req.params.id, { image: file.name });
+    await Product.findByIdAndUpdate(req.params.id, { images: [file.name] });
     res.status(200).json({ success: true, data: file.name });
   });
 });
