@@ -18,7 +18,7 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
   const reqQuery = { ...req.query };
 
   // Fields to exlude
-  const removeFields = ["select", "sort", "page", "limit"];
+  const removeFields = ["select", "sort", "page", "limit", "keyword"];
 
   // Loop over remove fields and remove them from reqQuery
 
@@ -34,8 +34,6 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
     (match) => `$${match}`
   );
 
-  console.log(`queryStr: ${queryStr}`.green.inverse);
-
   if (req.params.categoryId) {
     query = Product.find({
       ...JSON.parse(queryStr),
@@ -43,6 +41,12 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
     });
   } else {
     query = Product.find(JSON.parse(queryStr)).populate("category"); // .populate({ path: 'category', select: 'name slug'});
+  }
+
+  // Search
+  if (req.query.keyword) {
+    console.log(req.query.keyword.red.inverse);
+    query = query.find({ $text: { $search: new RegExp(req.query.keyword) } });
   }
 
   // Select Fields
@@ -61,12 +65,14 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
 
   // Pagination
   const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 40;
+  const limit = parseInt(req.query.limit, 10) || 20;
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
   const total = await Product.countDocuments();
 
-  query = query.skip(startIndex).limit(limit);
+  console.log(`pagination: ${[page, limit]}`.green.inverse);
+
+  query = await query.skip(startIndex).limit(limit);
 
   const products = await query;
 
