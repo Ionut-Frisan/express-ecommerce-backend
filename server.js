@@ -22,9 +22,10 @@ const reviews = require("./routes/reviews");
 
 require("dotenv").config({ path: "./config/config.env" });
 
-connectDB(process.env.MONGO_URI);
 // Middleware
 const morgan = require("morgan");
+
+connectDB(process.env.MONGO_URI);
 
 // Load env files
 const PORT = process.env.PORT || 5000;
@@ -56,7 +57,7 @@ app.use(xss());
 // Rate limit
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 mins
-  max: 100,
+  max: 200,
 });
 
 app.use(limiter);
@@ -64,8 +65,15 @@ app.use(limiter);
 // Prevent HTTP param pollution
 app.use(hpp());
 
+// TODO: fix cors
 // Enable CORS
-app.use(cors({ origin: "*" }));
+app.use(cors());
+app.use(function (req, res, next) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader('Access-Control-Allow-Methods', '*');
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 // Set static folder
 app.use(express.static(path.join(__dirname, "public")));

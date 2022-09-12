@@ -13,56 +13,6 @@ const path = require("path");
  * @access  Public
  */
 exports.getProducts = asyncHandler(async (req, res, next) => {
-  let query;
-
-  const reqQuery = { ...req.query };
-
-  // Fields to exlude
-  const removeFields = ["select", "sort", "page", "limit", "keyword"];
-
-  // Loop over remove fields and remove them from reqQuery
-
-  removeFields.forEach((param) => {
-    delete reqQuery[param];
-  });
-
-  let queryStr = JSON.stringify(reqQuery);
-
-  // Create valid operators ($gt, $gte etc) for mongo
-  queryStr = queryStr.replace(
-    /\b(gt|gte|lt|lte|in)\b/g,
-    (match) => `$${match}`
-  );
-
-  if (req.params.categoryId) {
-    query = Product.find({
-      ...JSON.parse(queryStr),
-      category: req.params.categoryId,
-    });
-  } else {
-    query = Product.find(JSON.parse(queryStr)).populate("category"); // .populate({ path: 'category', select: 'name slug'});
-  }
-
-  // Search
-  if (req.query.keyword) {
-    console.log(req.query.keyword.red.inverse);
-    query = query.find({ $text: { $search: new RegExp(req.query.keyword) } });
-  }
-
-  // Select Fields
-  if (req.query.select) {
-    const fields = req.query.select.split(",").join(" ");
-    query = query.select(fields);
-  }
-
-  // Sort
-  if (req.query.sort) {
-    const sortBy = req.query.sort.split(",").join(" ");
-    query = query.sort(sortBy);
-  } else {
-    query = query.sort("-date_added");
-  }
-
   // Pagination
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 20;
@@ -70,14 +20,73 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
   const endIndex = page * limit;
   const total = await Product.countDocuments();
 
-  console.log(`pagination: ${[page, limit]}`.green.inverse);
+  const getQuery = () => {
+    let query;
 
-  query = await query.skip(startIndex).limit(limit);
+    const reqQuery = { ...req.query };
 
-  const products = await query;
+    // Fields to exlude
+    const removeFields = ["select", "sort", "page", "limit", "keyword"];
+
+    // Loop over remove fields and remove them from reqQuery
+
+    removeFields.forEach((param) => {
+      delete reqQuery[param];
+    });
+
+    let queryStr = JSON.stringify(reqQuery);
+
+    // Create valid operators ($gt, $gte etc) for mongo
+    queryStr = queryStr.replace(
+      /\b(gt|gte|lt|lte|in)\b/g,
+      (match) => `$${match}`
+    );
+
+    if (req.params.categoryId) {
+      query = Product.find({
+        ...JSON.parse(queryStr),
+        category: req.params.categoryId,
+      });
+    } else {
+      query = Product.find(JSON.parse(queryStr)).populate("category"); // .populate({ path: 'category', select: 'name slug'});
+    }
+
+    // Search
+    if (req.query.keyword) {
+      console.log(req.query.keyword.red.inverse);
+      query = query.find({ $text: { $search: new RegExp(req.query.keyword) } });
+    }
+
+    // Select Fields
+    if (req.query.select) {
+      const fields = req.query.select.split(",").join(" ");
+      query = query.select(fields);
+    }
+
+    // Sort
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-date_added");
+    }
+    return query;
+
+    // return query.skip(startIndex).limit(limit);
+  };
+  // let totalCount = await Product.count(query);
+  // let totalCount = await query.then((products) => console.log(products.length));
+
+  let query = getQuery();
+  query = query.skip(startIndex).limit(limit);
+  products = await query;
+
+  const queryCopy = getQuery();
+  const totalCount = await queryCopy.count();
+  console.log("total count: ", totalCount);
 
   // Pagination Result
-  const pagination = {};
+  const pagination = { count: totalCount };
   if (endIndex < total) {
     pagination.next = {
       page: page + 1,
@@ -102,11 +111,13 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
 
 /**
  * @desc    Get single product
- * @route   GET api/v1/products/:id
+ * @route   GET api/v1/products/:slug
  * @access  Public
  */
 exports.getProduct = asyncHandler(async (req, res, next) => {
-  const product = await Product.findById(req.params.id);
+  // const product = await Product.findById(req.params.id);
+  console.log(req.params);
+  const product = await Product.find({ slug: req.params.id });
   if (!product) {
     return next(
       new ErrorResponse(`Product not found with id of ${req.params.id}`, 404)
