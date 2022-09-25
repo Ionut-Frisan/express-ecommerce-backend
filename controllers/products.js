@@ -78,8 +78,9 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
   // let totalCount = await query.then((products) => console.log(products.length));
 
   let query = getQuery();
-  query = query.skip(startIndex).limit(limit);
-  products = await query;
+  //query = query.skip(startIndex).limit(limit);
+  let products = await query;
+  console.log(products);
 
   const queryCopy = getQuery();
   const totalCount = await queryCopy.count();

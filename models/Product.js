@@ -65,4 +65,6 @@ ProductSchema.pre("findOneAndUpdate", function (next) {
   next();
 });
 
+ProductSchema.index({ description: "text", name: "text" });
+
 module.exports = mongoose.model("Product", ProductSchema);
