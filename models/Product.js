@@ -6,7 +6,7 @@ const ProductSchema = new mongoose.Schema({
     required: [true, "Name is required"],
     unique: true,
     trim: true,
-    maxLength: [50, "Name cannot be more than 50 characters"],
+    maxLength: [100, "Name cannot be more than 100 characters"],
   },
   slug: String,
   category: {
@@ -17,7 +17,7 @@ const ProductSchema = new mongoose.Schema({
   description: {
     type: String,
     required: [true, "Description is required"],
-    maxLength: [2000, "Name cannot be more than 2000 characters"],
+    maxLength: [5000, "Name cannot be more than 5000 characters"],
   },
   price: {
     type: Number,

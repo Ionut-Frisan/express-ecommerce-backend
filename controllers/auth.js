@@ -22,6 +22,8 @@ exports.register = asyncHandler(async (req, res, next) => {
     role,
   });
 
+  console.log(user);
+
   sendTokenResponse(user, 200, res);
 });
 

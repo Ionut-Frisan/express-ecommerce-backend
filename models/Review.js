@@ -4,12 +4,12 @@ const ReviewSchema = new mongoose.Schema({
   title: {
     type: String,
     maxLength: [100, "Name cannot be more than 100 characters"],
-    required: [true, "Please add a title for the review"],
+    // required: [true, "Please add a title for the review"],
     trim: true,
   },
   text: {
     type: String,
-    required: [true, "Please add a description"],
+    // required: [true, "Please add a description"],
   },
   rating: {
     type: Number,
@@ -41,7 +41,7 @@ const ReviewSchema = new mongoose.Schema({
 });
 
 // Prevent user from submitting more than one review per product
-ReviewSchema.index({ bootcamp: 1, user: 1 }, { unique: true });
+ReviewSchema.index({ product: 1, user: 1 }, { unique: true });
 
 // Static method to get avg rating and save
 ReviewSchema.statics.getAverageRating = async function (productId) {

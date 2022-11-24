@@ -16,13 +16,20 @@ const errorHandler = (err, req, res, next) => {
 
   // Mongoose duplicate key
   if (err.code === 11000) {
-    const message = `Duplicate field value entered`;
+    const fields = Object.keys(error.keyPattern);
+    let message = `Duplicate field value entered: `;
+    fields.forEach((field, index) => {
+      if(index !== fields.length - 1) message += `${field}, `
+      message += field
+    })
     error = new ErrorResponse(message, 400);
   }
 
   // Mongoose validation error
   if (err.name === "ValidationError") {
-    const message = Object.values(err.errors).map((val) => val.message);
+    console.log(err.errors);
+    const message = Object.values(err.errors).reduce((res, val) => `${res}${val.message} \n`, '');
+    console.log(message);
     error = new ErrorResponse(message, 400);
   }
 

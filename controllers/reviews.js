@@ -121,21 +121,31 @@ exports.getReview = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 exports.addReview = asyncHandler(async (req, res, next) => {
-  req.body.product = req.params.productId;
+  // req.body.product = req.params.productId;
   req.body.user = req.user.id;
 
-  const product = await Product.findById(req.params.productId);
+  const product = await Product.findById(req.body.product);
 
   if (!product) {
     return next(
       new ErrorResponse(
-        `No product found with the id of ${req.params.productId}`,
+        `No product found with the id of ${req.body.product}`,
         404
       )
     );
   }
   console.log(req.body);
-  const review = await Review.create(req.body);
+  let review = await Review.create(req.body);
+
+  const { firstName, lastName } = req.user;
+
+  review = {
+    ...review._doc,
+    user: {
+      firstName,
+      lastName,
+    }
+  }
 
   res.status(201).json({
     success: true,

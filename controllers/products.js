@@ -5,6 +5,7 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 
 const path = require("path");
+const fs = require("fs");
 
 /**
  * @desc    Get all products
@@ -70,21 +71,20 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
     } else {
       query = query.sort("-date_added");
     }
+    // TODO: Look into this
+    // query.populate('Category');
+
     return query;
 
     // return query.skip(startIndex).limit(limit);
   };
-  // let totalCount = await Product.count(query);
-  // let totalCount = await query.then((products) => console.log(products.length));
-
   let query = getQuery();
-  //query = query.skip(startIndex).limit(limit);
-  let products = await query;
-  console.log(products);
+  query = query.skip(startIndex).limit(limit);
+  //let products = await query;
+  let products = await Product.find();
 
   const queryCopy = getQuery();
   const totalCount = await queryCopy.count();
-  console.log("total count: ", totalCount);
 
   // Pagination Result
   const pagination = { count: totalCount };
@@ -117,7 +117,6 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
  */
 exports.getProduct = asyncHandler(async (req, res, next) => {
   // const product = await Product.findById(req.params.id);
-  console.log(req.params);
   const product = await Product.find({ slug: req.params.id });
   if (!product) {
     return next(
@@ -142,14 +141,29 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
       )
     );
   }
+
+  if(req.body.specifications)
+    try {
+      req.body.specifications = JSON.parse(req.body.specifications) || null;
+    } catch (e) {
+      req.body.specifications = null;
+    }
   const product = await Product.create(req.body);
 
   const saveFile = (file) => {
+    const generateFilename = (file) => {
+      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+      let name = "";
+      for(let i=0;i <20; i++){
+        name += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
+      return `photo_${product.id}_${name}${path.parse(file.name).ext}`
+    }
     if (
       file.mimetype.startsWith("image") &&
       file.size <= process.env.MAX_FILE_UPLOAD
     ) {
-      file.name = `photo_${product.id}${path.parse(file.name).ext}`;
+      file.name = generateFilename(file);
       file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
         if (err) {
           return next(
@@ -164,11 +178,9 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
   let namesArr = [];
   if (req.files?.images) {
     let files = req.files.images;
-    console.log(typeof files);
     if (Array.isArray(files)) for (const file of files) saveFile(file);
     else saveFile(files);
   }
-  console.log(namesArr);
   if (namesArr && product) {
     product.images = namesArr;
     await product.save();
@@ -208,6 +220,18 @@ exports.deleteProduct = asyncHandler(async (req, res, next) => {
     return next(
       new ErrorResponse(`Product not found with id of ${req.params.id}`, 404)
     );
+  }
+
+  // remove all images linked to this product
+  for (const image of product.images){
+      fs.unlink(`${process.env.FILE_UPLOAD_PATH}/${image}`, (err) => {
+        if(err){
+          console.log(`${image} could not be removed`);
+        }
+        else {
+          console.log(`${image} was removed`);
+        }
+      })
   }
 
   res.status(200).json({ success: true, data: {} });
