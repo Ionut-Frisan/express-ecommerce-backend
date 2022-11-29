@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Product = require("./Product");
 
 const ReviewSchema = new mongoose.Schema({
   title: {
@@ -67,8 +68,13 @@ ReviewSchema.statics.getAverageRating = async function (productId) {
 };
 
 // Call getAverageCost after save
-ReviewSchema.post("save", function () {
+ReviewSchema.post("save", async function () {
   this.constructor.getAverageRating(this.product);
+  const product = await Product.findById(this.product);
+  const reviews = product.reviews || [];
+  console.log(product);
+  product.reviews = [...reviews, this];
+  await product.save();
 });
 
 // Call getAverageCost before remove

@@ -80,8 +80,8 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
   };
   let query = getQuery();
   query = query.skip(startIndex).limit(limit);
-  //let products = await query;
-  let products = await Product.find();
+  let products = await query;
+  // let products = await Product.find();
 
   const queryCopy = getQuery();
   const totalCount = await queryCopy.count();

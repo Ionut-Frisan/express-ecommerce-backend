@@ -18,6 +18,7 @@ const {
 } = require("../controllers/products");
 
 const reviewRouter = require("./reviews");
+const {getReviews} = require("../controllers/reviews");
 
 const router = express.Router({ mergeParams: true });
 
@@ -33,5 +34,6 @@ router
   .put(protect, authorize("admin"), updateProduct)
   .delete(protect, authorize("admin"), deleteProduct);
 router.route("/:id/photo").put(protect, authorize("admin"), productUploadPhoto);
+// router.route("/:productId/reviews").get(getReviews);
 
 module.exports = router;

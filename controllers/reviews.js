@@ -1,5 +1,6 @@
 const Product = require("../models/Product");
 const Review = require("../models/Review");
+const {getUserFromResponse} = require('../utils/user');
 
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
@@ -11,85 +12,95 @@ const asyncHandler = require("../middleware/async");
  * @access Public
  */
 exports.getReviews = asyncHandler(async (req, res, next) => {
-  let query;
+    let user;
+    if (req.params.productId)
+        user = await getUserFromResponse(req)
 
-  const reqQuery = { ...req.query };
+    let query;
 
-  // Fields to exlude
-  const removeFields = ["select", "sort", "page", "limit"];
+    const reqQuery = {...req.query};
 
-  // Loop over remove fields and remove them from reqQuery
+    // Fields to exclude
+    const removeFields = ["select", "sort", "page", "limit"];
 
-  removeFields.forEach((param) => {
-    delete reqQuery[param];
-  });
+    // Loop over remove fields and remove them from reqQuery
 
-  let queryStr = JSON.stringify(reqQuery);
-
-  // Create valid operators ($gt, $gte etc) for mongo
-  queryStr = queryStr.replace(
-    /\b(gt|gte|lt|lte|in)\b/g,
-    (match) => `$${match}`
-  );
-
-  console.log(`queryStr: ${queryStr}`.green.inverse);
-
-  if (req.params.productId) {
-    query = Review.find({
-      ...JSON.parse(queryStr),
-      product: req.params.productId,
+    removeFields.forEach((param) => {
+        delete reqQuery[param];
     });
-  } else {
-    query = Review.find(JSON.parse(queryStr)).populate("product"); // .populate({ path: 'product', select: 'name slug'});
-  }
 
-  // Select Fields
-  if (req.query.select) {
-    const fields = req.query.select.split(",").join(" ");
-    query = query.select(fields);
-  }
+    let queryStr = JSON.stringify(reqQuery);
 
-  // Sort
-  if (req.query.sort) {
-    const sortBy = req.query.sort.split(",").join(" ");
-    query = query.sort(sortBy);
-  } else {
-    query = query.sort("-date_added");
-  }
+    // Create valid operators ($gt, $gte etc) for mongo
+    queryStr = queryStr.replace(
+        /\b(gt|gte|lt|lte|in)\b/g,
+        (match) => `$${match}`
+    );
 
-  // Pagination
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 40;
-  const startIndex = (page - 1) * limit;
-  const endIndex = page * limit;
-  const total = await Review.countDocuments();
+    console.log(`queryStr: ${queryStr}`.green.inverse);
 
-  query = query.skip(startIndex).limit(limit);
+    if (req.params.productId) {
+        query = Review.find({
+            ...JSON.parse(queryStr),
+            product: req.params.productId,
+        }).populate({path: 'product', select: 'name slug'}).populate({path: 'user', select: 'firstName lastName'});
+    } else {
+        query = Review.find(JSON.parse(queryStr)).populate({
+            path: 'product',
+            select: 'name slug'
+        }).populate({path: 'user', select: 'firstName lastName'});
+    }
 
-  const reviews = await query;
+    // Select Fields
+    if (req.query.select) {
+        const fields = req.query.select.split(",").join(" ");
+        query = query.select(fields);
+    }
 
-  // Pagination Result
-  const pagination = {};
-  if (endIndex < total) {
-    pagination.next = {
-      page: page + 1,
-      limit,
-    };
-  }
+    // Sort
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(",").join(" ");
+        query = query.sort(sortBy);
+    } else {
+        query = query.sort("-date_added");
+    }
 
-  if (startIndex > 0) {
-    pagination.prev = {
-      page: page - 1,
-      limit,
-    };
-  }
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 40;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await Review.countDocuments();
 
-  res.status(200).json({
-    success: true,
-    count: reviews.length,
-    pagination,
-    data: reviews,
-  });
+    query = query.skip(startIndex).limit(limit);
+
+    let reviews = await query;
+    if (user) {
+        reviews = reviews.map((review) => review.user.id === user.id ? {...review._doc, isMine: true} : review);
+    }
+
+    // Pagination Result
+    const pagination = {};
+    if (endIndex < total) {
+        pagination.next = {
+            page: page + 1,
+            limit,
+        };
+    }
+
+    if (startIndex > 0) {
+        pagination.prev = {
+            page: page - 1,
+            limit,
+        };
+    }
+
+    res.status(200).json({
+        success: true,
+        count: reviews.length,
+        pagination,
+        data: reviews,
+    });
 });
 
 /**
@@ -98,21 +109,21 @@ exports.getReviews = asyncHandler(async (req, res, next) => {
  * @access  Public
  */
 exports.getReview = asyncHandler(async (req, res, next) => {
-  const review = await Review.findById(req.params.id).populate({
-    path: "product",
-    select: "name description",
-  });
+    const review = await Review.findById(req.params.id).populate({
+        path: "product",
+        select: "name description",
+    });
 
-  if (!review) {
-    return next(
-      new ErrorResponse(`No reviews found with id ${req.params.id}`, 404)
-    );
-  }
+    if (!review) {
+        return next(
+            new ErrorResponse(`No reviews found with id ${req.params.id}`, 404)
+        );
+    }
 
-  res.status(200).json({
-    success: true,
-    data: review,
-  });
+    res.status(200).json({
+        success: true,
+        data: review,
+    });
 });
 
 /**
@@ -121,36 +132,36 @@ exports.getReview = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 exports.addReview = asyncHandler(async (req, res, next) => {
-  // req.body.product = req.params.productId;
-  req.body.user = req.user.id;
+    // req.body.product = req.params.productId;
+    req.body.user = req.user.id;
 
-  const product = await Product.findById(req.body.product);
+    const product = await Product.findById(req.body.product);
 
-  if (!product) {
-    return next(
-      new ErrorResponse(
-        `No product found with the id of ${req.body.product}`,
-        404
-      )
-    );
-  }
-  console.log(req.body);
-  let review = await Review.create(req.body);
-
-  const { firstName, lastName } = req.user;
-
-  review = {
-    ...review._doc,
-    user: {
-      firstName,
-      lastName,
+    if (!product) {
+        return next(
+            new ErrorResponse(
+                `No product found with the id of ${req.body.product}`,
+                404
+            )
+        );
     }
-  }
+    console.log(req.body);
+    let review = await Review.create(req.body);
 
-  res.status(201).json({
-    success: true,
-    data: review,
-  });
+    const {firstName, lastName} = req.user;
+
+    review = {
+        ...review._doc,
+        user: {
+            firstName,
+            lastName,
+        }
+    }
+
+    res.status(201).json({
+        success: true,
+        data: review,
+    });
 });
 
 /**
@@ -159,28 +170,28 @@ exports.addReview = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 exports.updateReview = asyncHandler(async (req, res, next) => {
-  let review = await Review.findById(req.params.id);
+    let review = await Review.findById(req.params.id);
 
-  if (!review) {
-    return next(
-      new ErrorResponse(`No review found with the id of ${req.params.id}`, 404)
-    );
-  }
+    if (!review) {
+        return next(
+            new ErrorResponse(`No review found with the id of ${req.params.id}`, 404)
+        );
+    }
 
-  // Make sure review belongs to user or user is an admin
-  if (review.user.toString() !== req.user.id && req.user.role !== "admin") {
-    return next(new ErrorResponse(`Not authorized to update review`, 401));
-  }
+    // Make sure review belongs to user or user is an admin
+    if (review.user.toString() !== req.user.id && req.user.role !== "admin") {
+        return next(new ErrorResponse(`Not authorized to update review`, 401));
+    }
 
-  review = await Review.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+    review = await Review.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+    });
 
-  res.status(200).json({
-    success: true,
-    data: review,
-  });
+    res.status(200).json({
+        success: true,
+        data: review,
+    });
 });
 
 /**
@@ -189,23 +200,23 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 exports.deleteReview = asyncHandler(async (req, res, next) => {
-  const review = await Review.findById(req.params.id);
+    const review = await Review.findById(req.params.id);
 
-  if (!review) {
-    return next(
-      new ErrorResponse(`No review found with the id of ${req.params.id}`, 404)
-    );
-  }
+    if (!review) {
+        return next(
+            new ErrorResponse(`No review found with the id of ${req.params.id}`, 404)
+        );
+    }
 
-  // Make sure review belongs to user or user is an admin
-  if (review.user.toString() !== req.user.id && req.user.role !== "admin") {
-    return next(new ErrorResponse(`Not authorized to remove review`, 401));
-  }
+    // Make sure review belongs to user or user is an admin
+    if (review.user.toString() !== req.user.id && req.user.role !== "admin") {
+        return next(new ErrorResponse(`Not authorized to remove review`, 401));
+    }
 
-  await review.remove();
+    await review.remove();
 
-  res.status(200).json({
-    success: true,
-    data: {},
-  });
+    res.status(200).json({
+        success: true,
+        data: {},
+    });
 });

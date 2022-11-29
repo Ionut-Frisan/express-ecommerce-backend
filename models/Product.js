@@ -50,6 +50,13 @@ const ProductSchema = new mongoose.Schema({
       default: ["no-photo.jpeg"],
     },
   ],
+  reviews: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Review',
+      default: []
+    }
+  ]
 });
 
 // Create Product slug from the name
