@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+
 const ProductSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -26,6 +27,7 @@ const ProductSchema = new mongoose.Schema({
   discount: {
     type: Number,
     default: 0,
+    max: 99,
   },
   date_added: {
     type: Date,

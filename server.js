@@ -19,6 +19,7 @@ const categories = require("./routes/categories");
 const auth = require("./routes/auth");
 const users = require("./routes/users");
 const reviews = require("./routes/reviews");
+const favorites = require("./routes/favorites");
 
 require("dotenv").config({ path: "./config/config.env" });
 
@@ -84,6 +85,7 @@ app.use("/api/v1/categories", categories);
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/users", users);
 app.use("/api/v1/reviews", reviews);
+app.use("/api/v1/favorites", favorites);
 
 app.use(errorHandler);
 const server = app.listen(PORT, () =>

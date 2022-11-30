@@ -3,9 +3,6 @@ const express = require("express");
 // Import Middleware
 const advancedResults = require("../middleware/advancedResults");
 
-// Import Model
-const Review = require("../models/Review");
-
 const { protect, authorize } = require("../middleware/auth");
 
 const {

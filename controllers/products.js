@@ -1,5 +1,7 @@
 const Product = require("../models/Product");
 const Category = require("../models/Category");
+const Favorite = require("../models/Favorite");
+const {getUserFromResponse} = require("../utils/user");
 
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
@@ -78,10 +80,13 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
 
     // return query.skip(startIndex).limit(limit);
   };
+
   let query = getQuery();
   query = query.skip(startIndex).limit(limit);
   let products = await query;
-  // let products = await Product.find();
+  products = await mapFavorites(req, products);
+  //
+
 
   const queryCopy = getQuery();
   const totalCount = await queryCopy.count();
@@ -117,12 +122,15 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
  */
 exports.getProduct = asyncHandler(async (req, res, next) => {
   // const product = await Product.findById(req.params.id);
-  const product = await Product.find({ slug: req.params.id });
+  let product = await Product.find({ slug: req.params.id });
   if (!product) {
     return next(
       new ErrorResponse(`Product not found with id of ${req.params.id}`, 404)
     );
   }
+
+  product = await mapFavorites(req, product);
+
   res.status(200).json({ success: true, data: product });
 });
 
@@ -284,3 +292,27 @@ exports.productUploadPhoto = asyncHandler(async (req, res, next) => {
     res.status(200).json({ success: true, data: file.name });
   });
 });
+
+const mapFavorites = async (req, products) => {
+  const user = await getUserFromResponse(req);
+  if(!user) return products;
+
+  let favorites = await Favorite.find({user});
+  if(!favorites) return products;
+
+  favorites = favorites.map((favorite) => favorite.product.toString())
+
+  if(Array.isArray(products)){
+    return products.map((product) => {
+      return favorites.some((favoriteId) => favoriteId === product.id)
+        ? { ... product._doc, favorite: true}
+        : { ...product._doc, favorite: false}
+    })
+  }
+  else if(typeof products === 'object'){
+    return favorites.some((favoriteId) => favoriteId === products.id)
+        ? { ... products._doc, favorite: true}
+        : { ...products._doc, favorite: false}
+  }
+  return products;
+}
