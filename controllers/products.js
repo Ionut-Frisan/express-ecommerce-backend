@@ -241,6 +241,9 @@ exports.deleteProduct = asyncHandler(async (req, res, next) => {
         }
       })
   }
+  // remove favorites for this product
+  await Favorite.deleteMany({product: req.params.id});
+
 
   res.status(200).json({ success: true, data: {} });
 });
