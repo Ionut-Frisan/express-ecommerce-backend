@@ -15,6 +15,7 @@ const {
   updateProduct,
   deleteProduct,
   productUploadPhoto,
+  getCartPrice
 } = require("../controllers/products");
 
 const reviewRouter = require("./reviews");
@@ -28,12 +29,20 @@ router
   .route("/")
   .get(/*advancedResults(Product, "category"),*/ getProducts)
   .post(protect, authorize("admin"), createProduct);
+
+router
+    .route('/cartPrice')
+    .post(getCartPrice);
+
 router
   .route("/:id")
   .get(getProduct)
   .put(protect, authorize("admin"), updateProduct)
   .delete(protect, authorize("admin"), deleteProduct);
-router.route("/:id/photo").put(protect, authorize("admin"), productUploadPhoto);
+
+router
+    .route("/:id/photo")
+    .put(protect, authorize("admin"), productUploadPhoto);
 // router.route("/:productId/reviews").get(getReviews);
 
 module.exports = router;

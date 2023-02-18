@@ -296,6 +296,26 @@ exports.productUploadPhoto = asyncHandler(async (req, res, next) => {
   });
 });
 
+exports.getCartPrice = asyncHandler(async (req, res, next) => {
+  const { products } = req.body;
+  if(!products) return res.json({success: false, data: 'No products.'}).status(404);
+
+  const ids = products.map((product) => product.id);
+  const dbProducts = await Product.find({_id: {$in: ids}}).select('price discount');
+
+  const price = dbProducts.reduce((sum, curr) => {
+    const product = products.find((prod) => prod.id === curr.id);
+    return sum + (product.quantity * curr.price * (100 - curr.discount) / 100);
+  }, 0)
+
+  // console.log(products);
+  // console.log(dbProducts);
+  //
+  // console.log(ids.every(id => dbProducts.some((prod) => prod.id === id)));
+
+  res.json({success: true, data: {price, dbProducts}});
+});
+
 const mapFavorites = async (req, products) => {
   const user = await getUserFromResponse(req);
   if(!user) return products;

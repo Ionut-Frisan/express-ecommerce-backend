@@ -4,6 +4,7 @@ const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
+const jwt = require("jsonwebtoken");
 
 /**
  * @desc    Register user
@@ -207,14 +208,50 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 });
 
+exports.checkToken = asyncHandler(async (req, res, next) => {
+  let token;
+  console.log(new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+  ));
+  if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer ")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.token) {
+    token = req.cookies.token;
+  }
+
+  if (!token) {
+    return res.json({status: false, message: 'Not authenticated'}).status(401);
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const JWTTimestamp = decoded.exp * 1000;
+    const currentTimestamp = new Date().getTime();
+
+    if (JWTTimestamp < currentTimestamp)
+      return res.json({status: false, message: 'Expired'}).status(401);
+
+    const user = await User.findById(decoded.id);
+    if (!user)
+      return res.json({status: false, message: 'Invalid token'}).status(401);
+    res.json({status: true, message: 'Valid token'}).status(200);
+
+  } catch (err) {
+    return res.json({status: false, message: "Error"}).status(500);
+  }
+});
+
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
   const token = user.getSignedJwtToken();
-
   const options = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
     ),
+    secret: process.env.JWT_SECRET,
     httpOnly: true,
   };
 
