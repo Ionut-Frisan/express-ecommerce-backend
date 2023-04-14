@@ -13,6 +13,7 @@ const OrderSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         required: true,
     }],
+    quantities: [Object],
     uuid: {
         type: String,
         default: uuid(),
@@ -47,8 +48,33 @@ const OrderSchema = new mongoose.Schema({
     },
     payment_type: {
         type: String,
-        enum: ["card, cash"],
+        enum: ["card", "cash"],
         default: "card",
     },
     vouchers: [String],
+    stripe_id: String,
+    payment_intent: {
+        type: String,
+    },
+    status: {
+        type: String,
+        enum: [
+            "waitingForPayment",
+            "paymentCompleted",
+            "orderAccepted",
+            "inProgress",
+            "delivering",
+            "completed",
+            "cancelled",
+            "paymentRejected",
+        ],
+        default: "waitingForPayment",
+    },
+    total: Number,
+    created_at: {
+        type: Date,
+        default: new Date(),
+    }
 })
+
+module.exports = mongoose.model("Order", OrderSchema);

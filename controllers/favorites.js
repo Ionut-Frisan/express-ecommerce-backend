@@ -13,7 +13,6 @@ exports.getMyFavorites = asyncHandler(async (req, res, next) => {
     const user = req.user;
 
     const favorites = await Favorite.find({user}).populate({path: 'product'});
-    console.log(favorites);
     res.status(200).json({success: true, data: favorites});
 });
 

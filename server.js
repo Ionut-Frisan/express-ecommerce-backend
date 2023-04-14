@@ -20,6 +20,8 @@ const auth = require("./routes/auth");
 const users = require("./routes/users");
 const reviews = require("./routes/reviews");
 const favorites = require("./routes/favorites");
+const orders = require("./routes/orders");
+const webhooks = require("./routes/webhooks");
 
 require("dotenv").config({ path: "./config/config.env" });
 
@@ -86,6 +88,8 @@ app.use("/api/v1/auth", auth);
 app.use("/api/v1/users", users);
 app.use("/api/v1/reviews", reviews);
 app.use("/api/v1/favorites", favorites);
+app.use("/api/v1/orders", orders);
+app.use("/api/v1/webhooks/payment", webhooks);
 
 app.use(errorHandler);
 const server = app.listen(PORT, () =>
