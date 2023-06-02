@@ -12,6 +12,7 @@ const OrderSchema = new mongoose.Schema({
     products: [{
         type: mongoose.Schema.ObjectId,
         required: true,
+        ref: 'Product',
     }],
     quantities: [Object],
     uuid: {

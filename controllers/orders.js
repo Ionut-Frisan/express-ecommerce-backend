@@ -6,6 +6,7 @@ require("dotenv").config();
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const { getDiscountedPrice } = require("../utils/productHelpers");
+const { getUserFromResponse } = require("../utils/user");
 
 const Stripe = require("stripe");
 
@@ -16,8 +17,29 @@ const Stripe = require("stripe");
  */
 exports.getOrders = asyncHandler(async (req, res, next) => {
     const orders = await Order.find().populate({path: 'products'});
-    console.log(orders);
     res.status(200).json({success: true, data: orders});
+});
+
+/**
+ * @desc    Get all orders for logged-in user
+ * @route   GET api/v1/orders/me
+ * @access  Private
+ */
+exports.getMyOrders = asyncHandler(async (req, res, next) => {
+    const user = req.user;
+    const orders = await Order.find({ user: user._id }).populate('products');
+    res.status(200).json({success: true, data: orders});
+});
+
+/**
+ * @desc    Get order by id
+ * @route   GET api/v1/orders/:id
+ * @access  public
+ */
+exports.getOrderById = asyncHandler(async (req, res, next) => {
+    const id = req.params.id;
+    const order = await Order.findById(id).populate('products');
+    res.status(200).json({success: true, data: order});
 });
 
 /**
@@ -26,7 +48,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 exports.createOrder = asyncHandler(async (req, res, next) => {
-    const user = req.user;
+    const user = await getUserFromResponse(req);
 
     const { products, details } = req.body;
 
@@ -73,11 +95,10 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         stripe_id: session.id,
         quantities,
         total: session.amount_total,
+        user,
     }
 
-
     const order = await Order.create(orderDetails);
-    console.log(order);
 
     res.status(201).json({success: true, data: { order, sessionId: session.id, url: session.url }});
 })
