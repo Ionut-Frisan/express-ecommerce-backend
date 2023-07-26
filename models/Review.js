@@ -62,9 +62,7 @@ ReviewSchema.statics.getAverageRating = async function (productId) {
     await this.model("Product").findByIdAndUpdate(productId, {
       averageRating: obj[0].averageRating,
     });
-  } catch (err) {
-    console.error(err);
-  }
+  } catch (err) {}
 };
 
 // Call getAverageCost after save
@@ -72,7 +70,7 @@ ReviewSchema.post("save", async function () {
   this.constructor.getAverageRating(this.product);
   const product = await Product.findById(this.product);
   const reviews = product.reviews || [];
-  console.log(product);
+
   product.reviews = [...reviews, this];
   await product.save();
 });

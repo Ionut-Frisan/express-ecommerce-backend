@@ -34,12 +34,10 @@ exports.handlePaymentIntentResponse = asyncHandler(async (req, res, next) => {
                 status = "paymentRejected";
                 break;
         }
-        console.log(status);
         if (status === "waitingForPayment") {
             return res.json({});
         }
         const order = await Order.findOne({ stripe_id: obj.id });
-        // console.log(order);
     }
 
     if (type === "checkout.session") {

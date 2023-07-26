@@ -45,7 +45,6 @@ exports.deleteFavorite = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Something went wrong. Try again.'), 404);
     }
     await Favorite.findOneAndDelete({user, product})
-        // console.log(err, doc);
         // if(err)
         //     return res.status(404).json({success: false, data: "Something went wrong"})
         // else{

@@ -209,9 +209,7 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
 
 exports.checkToken = asyncHandler(async (req, res, next) => {
   let token;
-  console.log(new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-  ));
+
   if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer ")

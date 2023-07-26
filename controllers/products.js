@@ -56,7 +56,6 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
 
     // Search
     if (req.query.keyword) {
-      console.log(req.query.keyword.red.inverse);
       query = query.find({ $text: { $search: new RegExp(req.query.keyword) } });
     }
 
@@ -287,7 +286,6 @@ exports.productUploadPhoto = asyncHandler(async (req, res, next) => {
 
   file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
     if (err) {
-      console.error(err);
       return next(new ErrorResponse(`Problem with file upload`, 500));
     }
 
@@ -307,11 +305,6 @@ exports.getCartPrice = asyncHandler(async (req, res, next) => {
     const product = products.find((prod) => prod.id === curr.id);
     return sum + (product.quantity * curr.price * (100 - curr.discount) / 100);
   }, 0)
-
-  // console.log(products);
-  // console.log(dbProducts);
-  //
-  // console.log(ids.every(id => dbProducts.some((prod) => prod.id === id)));
 
   res.json({success: true, data: {price, dbProducts}});
 });

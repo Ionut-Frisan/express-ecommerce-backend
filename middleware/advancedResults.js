@@ -20,8 +20,6 @@ const advancedResults = (model, populate) => async (req, res, next) => {
     (match) => `$${match}`
   );
 
-  console.log(`queryStr: ${queryStr}`.green.inverse);
-
   if (req.params.categoryId) {
     query = model.find({
       ...JSON.parse(queryStr),

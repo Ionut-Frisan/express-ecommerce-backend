@@ -37,8 +37,6 @@ exports.getReviews = asyncHandler(async (req, res, next) => {
         (match) => `$${match}`
     );
 
-    console.log(`queryStr: ${queryStr}`.green.inverse);
-
     if (req.params.productId) {
         query = Review.find({
             ...JSON.parse(queryStr),
@@ -145,7 +143,6 @@ exports.addReview = asyncHandler(async (req, res, next) => {
             )
         );
     }
-    console.log(req.body);
     let review = await Review.create(req.body);
 
     const {firstName, lastName} = req.user;
