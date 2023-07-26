@@ -171,23 +171,20 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
       file.size <= process.env.MAX_FILE_UPLOAD
     ) {
       file.name = generateFilename(file);
-      console.log(`filename: ${file.name}`);
       file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
-        console.log(`file.mv`);
         if (err) {
-          console.log(`error for file: ${file.name}`);
           return next(
             new ErrorResponse("Something went wrong when saving a file", 500)
           );
         }
       });
       namesArr.push(file.name);
+    } else if (file.size > process.env.MAX_FILE_UPLOAD){
+      console.log(`file ${file.name} exceeds maximum filesize`)
     }
   };
 
   let namesArr = [];
-  console.log(req.files);
-  console.log(req.images);
   if (req.files?.images) {
     let files = req.files.images;
     if (Array.isArray(files)) for (const file of files) saveFile(file);
