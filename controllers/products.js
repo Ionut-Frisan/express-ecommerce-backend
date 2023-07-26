@@ -186,6 +186,8 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
   };
 
   let namesArr = [];
+  console.log(req.files);
+  console.log(req.images);
   if (req.files?.images) {
     let files = req.files.images;
     if (Array.isArray(files)) for (const file of files) saveFile(file);
