@@ -5,6 +5,7 @@ const {
     getOrders,
     getMyOrders,
     getOrderById,
+    updateOrderStatus,
 } = require("../controllers/orders");
 
 const { protect, authorize } = require("../middleware/auth");
@@ -24,10 +25,10 @@ router
     .route("/:id")
     .get(getOrderById)
 
-// router
-//     .route("/:id")
-//     .get(protect, authorize("admin"), getCategory)
-//     .put(protect, authorize("admin"), updateCategory)
-//     .delete(protect, authorize("admin"), deleteCategory);
+
+router
+    .route("/:id/status")
+    .patch(updateOrderStatus)
+
 
 module.exports = router;

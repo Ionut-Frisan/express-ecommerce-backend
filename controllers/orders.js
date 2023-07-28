@@ -43,6 +43,18 @@ exports.getOrderById = asyncHandler(async (req, res, next) => {
 });
 
 /**
+ * @desc    Update order status
+ * @route   Patch api/v1/orders/:id/status
+ * @access  public
+ */
+exports.updateOrderStatus = asyncHandler(async (req, res, next) => {
+    const id = req.params.id;
+    const status = req.body.status;
+    const order = await Order.findByIdAndUpdate(id, {status}, { new: true });
+    res.status(200).json({success: true, data: order});
+});
+
+/**
  * @desc    Add new order with stripe payment
  * @route   Post api/v1/orders
  * @access  Private
@@ -101,28 +113,4 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
     const order = await Order.create(orderDetails);
 
     res.status(201).json({success: true, data: { order, sessionId: session.id, url: session.url }});
-})
-
-/**
- * @desc    Add product to favorites
- * @route   Delete api/v1/favorites/:productId
- * @access  Private
- */
-exports.deleteFavorite = asyncHandler(async (req, res, next) => {
-    const user = req.user;
-
-    const product = await Product.findById(req.params.productId)
-    if (!product) {
-        return next(new ErrorResponse('Something went wrong. Try again.'), 404);
-    }
-    await Favorite.findOneAndDelete({user, product})
-    // if(err)
-    //     return res.status(404).json({success: false, data: "Something went wrong"})
-    // else{
-    //     user.favorites = user.favorites.filter((favorite) => favorite.toString() !== doc._id.toString())
-    //     await user.save()
-    // }
-    // });
-
-    res.status(201).json({success: true, data: 'Product was removed from favorites'});
 })
