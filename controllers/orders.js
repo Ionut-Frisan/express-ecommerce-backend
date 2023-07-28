@@ -7,7 +7,7 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const { getDiscountedPrice } = require("../utils/productHelpers");
 const { getUserFromResponse } = require("../utils/user");
-
+const { config } = require("../config/app.config");
 const Stripe = require("stripe");
 
 /**
@@ -87,8 +87,8 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
     const stripeParams = {
         payment_method_types: ["card"],
         mode: "payment",
-        success_url: "http://localhost:5173/success",
-        cancel_url: "http://localhost:3000/cancel",
+        success_url: `${config.frontendUrl}/success`,
+        cancel_url: `${config.frontendUrl}/cancel`,
         line_items: lineItems,
     };
 

@@ -1,0 +1,22 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  versioning:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Increment version ( _._.x)
+        run: |
+          git config user.email "ionutfrisan@gmail.com"
+          git config user.name "workflow"
+          npm run update-version
