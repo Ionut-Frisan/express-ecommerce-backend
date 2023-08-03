@@ -330,10 +330,10 @@ exports.getCartPrice = asyncHandler(async (req, res, next) => {
 
 const mapFavorites = async (req, products) => {
   const user = await getUserFromResponse(req);
-  if(!user) return products;
+  if(!user) return products.map((product) => product._doc);
 
   let favorites = await Favorite.find({user});
-  if(!favorites) return products;
+  if(!favorites) return products.map((product) => product._doc);
 
   favorites = favorites.map((favorite) => favorite.product.toString())
 
