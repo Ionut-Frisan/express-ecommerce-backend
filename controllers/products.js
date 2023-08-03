@@ -9,6 +9,10 @@ const asyncHandler = require("../middleware/async");
 const path = require("path");
 const fs = require("fs");
 
+const {
+  uploadImage, deleteImage, getImageUrl, getImageArraySrc,
+} = require('../utils/imageManager');
+
 /**
  * @desc    Get all products
  * @route   GET api/v1/products
@@ -84,7 +88,7 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
   query = query.skip(startIndex).limit(limit);
   let products = await query;
   products = await mapFavorites(req, products);
-  //
+  products = await mapImageUrls(products);
 
 
   const queryCopy = getQuery();
@@ -130,6 +134,8 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
 
   product = await mapFavorites(req, product);
 
+  product = await mapImageUrls(product);
+
   res.status(200).json({ success: true, data: product });
 });
 
@@ -157,28 +163,31 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
     }
   const product = await Product.create(req.body);
 
-  const saveFile = (file) => {
+  const saveFile = async (file) => {
     const generateFilename = (file) => {
       const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
       let name = "";
       for(let i=0;i <20; i++){
         name += chars.charAt(Math.floor(Math.random() * chars.length))
       }
-      return `photo_${product.id}_${name}${path.parse(file.name).ext}`
+      return `product-images/photo_${product.id}_${name}${path.parse(file.name).ext}`
     }
     if (
       file.mimetype.startsWith("image") &&
       file.size <= process.env.MAX_FILE_UPLOAD
     ) {
       file.name = generateFilename(file);
-      file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
-        if (err) {
-          return next(
-            new ErrorResponse("Something went wrong when saving a file", 500)
-          );
-        }
-      });
-      namesArr.push(file.name);
+      // file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
+      //   if (err) {
+      //     return next(
+      //       new ErrorResponse("Something went wrong when saving a file", 500)
+      //     );
+      //   }
+      // });
+      await uploadImage(file).then((res) => {
+        namesArr.push(file.name);
+      }).catch((err) => console.error('Could not save a file'))
+      // namesArr.push(file.name);
     } else if (file.size > process.env.MAX_FILE_UPLOAD){
       console.log(`file ${file.name} exceeds maximum filesize`)
     }
@@ -187,15 +196,20 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
   let namesArr = [];
   if (req.files?.images) {
     let files = req.files.images;
-    if (Array.isArray(files)) for (const file of files) saveFile(file);
-    else saveFile(files);
+    if (Array.isArray(files)) {
+      const promises = files.map((file) => saveFile(file));
+      await Promise.all(promises);
+      // for (const file of files) await saveFile(file);
+    }
+    else await saveFile(files);
   }
-  console.log({namesArr});
+  // return;
   if (namesArr && product) {
     product.images = namesArr;
     await product.save();
+    return res.status(201).json({ success: true, data: product });
   }
-  res.status(201).json({ success: true, data: product });
+  return res.status(400).json({success: false, data: product});
 });
 
 /**
@@ -234,14 +248,15 @@ exports.deleteProduct = asyncHandler(async (req, res, next) => {
 
   // remove all images linked to this product
   for (const image of product.images){
-      fs.unlink(`${process.env.FILE_UPLOAD_PATH}/${image}`, (err) => {
-        if(err){
-          console.log(`${image} could not be removed`);
-        }
-        else {
-          console.log(`${image} was removed`);
-        }
-      })
+      // fs.unlink(`${process.env.FILE_UPLOAD_PATH}/${image}`, (err) => {
+      //   if(err){
+      //     console.log(`${image} could not be removed`);
+      //   }
+      //   else {
+      //     console.log(`${image} was removed`);
+      //   }
+      // })
+      await deleteImage(image);
   }
   // remove favorites for this product
   await Favorite.deleteMany({product: req.params.id});
@@ -256,6 +271,7 @@ exports.deleteProduct = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 exports.productUploadPhoto = asyncHandler(async (req, res, next) => {
+  // TODO: update this
   const product = await Product.findById(req.params.id);
 
   if (!product) {
@@ -334,4 +350,16 @@ const mapFavorites = async (req, products) => {
         : { ...products._doc, favorite: false}
   }
   return products;
+}
+
+const mapImageUrls = async (products) => {
+  if (!Array.isArray(products) || !products.length) return [];
+  const promises = products.map((product) => getImageArraySrc(product.images));
+  const res = await Promise.all(promises);
+  return products.map((product, index) => {
+    return {
+      ...product,
+      imageUrls: res[index],
+    }
+  })
 }
