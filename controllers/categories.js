@@ -1,6 +1,7 @@
 const Category = require("../models/Category");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
+
 /**
  * @desc    Get all categories
  * @route   GET api/v1/categories

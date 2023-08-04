@@ -3,7 +3,6 @@ require("dotenv").config();
 
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
-const { getDiscountedPrice } = require("../utils/productHelpers");
 
 const Stripe = require("stripe");
 

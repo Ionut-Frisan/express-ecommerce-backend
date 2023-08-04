@@ -8,7 +8,6 @@ const asyncHandler = require("../middleware/async");
  * @desc    Get Reviews
  * @route   GET api/v1/reviews
  * @route   GET api/v1/products/:productId/reviews
- *
  * @access Public
  */
 exports.getReviews = asyncHandler(async (req, res, next) => {
@@ -130,7 +129,6 @@ exports.getReview = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 exports.addReview = asyncHandler(async (req, res, next) => {
-    // req.body.product = req.params.productId;
     req.body.user = req.user.id;
 
     const product = await Product.findById(req.body.product);

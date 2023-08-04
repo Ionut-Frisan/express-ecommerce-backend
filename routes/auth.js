@@ -22,6 +22,6 @@ router.put("/resetPassword/:resettoken", resetPassword);
 router.put("/updateDetails", protect, updateDetails);
 router.put("/updatePassword", protect, updatePassword);
 router.get("/logout", logout);
-router.get("/checkAuth", protect, checkToken);
+router.get("/verify-token", protect, checkToken);
 
 module.exports = router;

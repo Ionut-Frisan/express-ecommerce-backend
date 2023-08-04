@@ -9,7 +9,6 @@ const jwt = require("jsonwebtoken");
 /**
  * @desc    Register user
  * @route   POST /api/v1/auth/register
- *
  * @access  Public
  */
 exports.register = asyncHandler(async (req, res, next) => {
@@ -30,7 +29,6 @@ exports.register = asyncHandler(async (req, res, next) => {
 /**
  * @desc    Login user
  * @route   POST /api/v1/auth/login
- *
  * @access  Public
  */
 exports.login = asyncHandler(async (req, res, next) => {
@@ -76,7 +74,6 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 /**
  * @desc    Log user out/ clear cookie
  * @route   Get api/v1/auth/logout
- *
  * @access  Private
  */
 exports.logout = asyncHandler(async (req, res, next) => {
@@ -94,7 +91,6 @@ exports.logout = asyncHandler(async (req, res, next) => {
 /**
  * @desc    Update user details
  * @route   PUT /api/v1/auth/updateDetails
- *
  * @access  Private
  */
 exports.updateDetails = asyncHandler(async (req, res, next) => {
@@ -117,7 +113,6 @@ exports.updateDetails = asyncHandler(async (req, res, next) => {
 /**
  * @desc    Update user password
  * @route   PUT /api/v1/auth/updatePassword
- *
  * @access  Private
  */
 exports.updatePassword = asyncHandler(async (req, res, next) => {
@@ -137,7 +132,6 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
 /**
  * @desc    Forgot password
  * @route   POST /api/v1/auth/forgotPassword
- *
  * @access  public
  */
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
@@ -179,7 +173,6 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 /**
  * @desc    Reset password
  * @route   Put /api/v1/auth/resetPassword/:resettoken
- *
  * @access  Public
  */
 exports.resetPassword = asyncHandler(async (req, res, next) => {
@@ -207,6 +200,11 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 });
 
+/**
+ * @desc    Verify JWT token
+ * @route   Put /api/v1/auth/verify-token
+ * @access  Private
+ */
 exports.checkToken = asyncHandler(async (req, res, next) => {
   let token;
 

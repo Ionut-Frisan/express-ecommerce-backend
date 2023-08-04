@@ -7,7 +7,6 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 
 const path = require("path");
-const fs = require("fs");
 
 const {
   uploadImage, deleteImage, getImageUrl, getImageArraySrc,
@@ -55,7 +54,7 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
         category: req.params.categoryId,
       });
     } else {
-      query = Product.find(JSON.parse(queryStr)).populate("category"); // .populate({ path: 'category', select: 'name slug'});
+      query = Product.find(JSON.parse(queryStr)).populate("category");
     }
 
     // Search
@@ -76,21 +75,14 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
     } else {
       query = query.sort("-date_added");
     }
-    // TODO: Look into this
-    // query.populate('Category');
 
     return query;
-
-    // return query.skip(startIndex).limit(limit);
   };
 
   let query = getQuery();
   query = query.skip(startIndex).limit(limit);
   let products = await query;
   products = await mapFavorites(req, products);
-  // Moved to post find hook on model
-  // products = await mapImageUrls(products);
-
 
   const queryCopy = getQuery();
   const totalCount = await queryCopy.count();
@@ -135,8 +127,6 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
 
   product = await mapFavorites(req, product);
 
-  // product = await mapImageUrls(product);
-
   res.status(200).json({ success: true, data: product });
 });
 
@@ -178,17 +168,10 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
       file.size <= process.env.MAX_FILE_UPLOAD
     ) {
       file.name = generateFilename(file);
-      // file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
-      //   if (err) {
-      //     return next(
-      //       new ErrorResponse("Something went wrong when saving a file", 500)
-      //     );
-      //   }
-      // });
+
       await uploadImage(file).then((res) => {
         namesArr.push(file.name);
       }).catch((err) => console.error('Could not save a file'))
-      // namesArr.push(file.name);
     } else if (file.size > process.env.MAX_FILE_UPLOAD){
       console.log(`file ${file.name} exceeds maximum filesize`)
     }
@@ -200,11 +183,9 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
     if (Array.isArray(files)) {
       const promises = files.map((file) => saveFile(file));
       await Promise.all(promises);
-      // for (const file of files) await saveFile(file);
     }
     else await saveFile(files);
   }
-  // return;
   if (namesArr && product) {
     product.images = namesArr;
     await product.save();
@@ -247,16 +228,9 @@ exports.deleteProduct = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // TODO: Promise.all() ?
   // remove all images linked to this product
   for (const image of product.images){
-      // fs.unlink(`${process.env.FILE_UPLOAD_PATH}/${image}`, (err) => {
-      //   if(err){
-      //     console.log(`${image} could not be removed`);
-      //   }
-      //   else {
-      //     console.log(`${image} was removed`);
-      //   }
-      // })
       await deleteImage(image);
   }
   // remove favorites for this product
@@ -314,6 +288,11 @@ exports.productUploadPhoto = asyncHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Get cart price
+ * @route   Put api/v1/products/cartPrice
+ * @access  Public
+ */
 exports.getCartPrice = asyncHandler(async (req, res, next) => {
   const { products } = req.body;
   if(!products) return res.json({success: false, data: 'No products.'}).status(404);

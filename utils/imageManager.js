@@ -10,6 +10,11 @@ const client = new S3Client({
 
 const cache = new Cache({ stdTTL: process.env.S3_SIGNED_URL_EXPIRE - 100 || 3600 })
 
+
+/**
+ * @desc    Remove image from storage
+ * @param  fileName {String} Specifies the name of the file to be removed
+ */
 exports.deleteImage = async (fileName) => {
     const input = {
         Bucket: 'whynot-uploads',
@@ -22,6 +27,10 @@ exports.deleteImage = async (fileName) => {
     return response;
 }
 
+/**
+ * @desc    Add image to storage
+ * @param  file {File} File that will be stored
+ */
 exports.uploadImage = async (file) => {
     const input = {
         Bucket: 'whynot-uploads',
@@ -35,6 +44,10 @@ exports.uploadImage = async (file) => {
     return await client.send(command);
 }
 
+/**
+ * @desc    Get signed public image url
+ * @param  fileName {String} Specifies the name of the file the url will be generated for
+ */
 exports.getImageUrl = async (fileName) => {
     const input = {
         Bucket: 'whynot-uploads',
@@ -46,8 +59,11 @@ exports.getImageUrl = async (fileName) => {
     return url;
 }
 
-let totalCount = 0;
-
+/**
+ * @desc    Get signed public images url
+ * @param  fileNames {Array<String>} Get signed urls for filenames
+ * @param  id {String} Product id, used for caching purposes
+ */
 exports.getImageArraySrc = async (fileNames, id) => {
     if (!Array.isArray(fileNames) || !fileNames.length) {
         return [];
@@ -71,6 +87,6 @@ exports.getImageArraySrc = async (fileNames, id) => {
 
     // store in cache
     if (id) cache.set(id, res);
-    console.log(totalCount);
+
     return res;
 }
