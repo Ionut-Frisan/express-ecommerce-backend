@@ -88,7 +88,8 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
   query = query.skip(startIndex).limit(limit);
   let products = await query;
   products = await mapFavorites(req, products);
-  products = await mapImageUrls(products);
+  // Moved to post find hook on model
+  // products = await mapImageUrls(products);
 
 
   const queryCopy = getQuery();
@@ -134,7 +135,7 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
 
   product = await mapFavorites(req, product);
 
-  product = await mapImageUrls(product);
+  // product = await mapImageUrls(product);
 
   res.status(200).json({ success: true, data: product });
 });
@@ -352,6 +353,7 @@ const mapFavorites = async (req, products) => {
   return products;
 }
 
+// Moved to post find schema hook
 const mapImageUrls = async (products) => {
   if (!Array.isArray(products) || !products.length) return [];
   const promises = products.map((product) => getImageArraySrc(product.images));

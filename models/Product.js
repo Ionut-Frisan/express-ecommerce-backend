@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const User = require("./User");
+const {getImageArraySrc} = require("../utils/imageManager");
 
 const ProductSchema = new mongoose.Schema({
   name: {
@@ -71,6 +73,23 @@ ProductSchema.pre("save", function (next) {
 ProductSchema.pre("findOneAndUpdate", function (next) {
   if (this._update.name)
     this._update.slug = slugify(this._update.name, { lower: true });
+  next();
+});
+
+ProductSchema.post("find", async (doc, next) => {
+  if(Array.isArray(doc)) {
+    let newArr = [];
+    for (let i=0; i < doc.length; i++) {
+      const imageUrls = await getImageArraySrc(doc[i].images, doc[i]._id.toString());
+      doc[i].imageUrls = imageUrls;
+      doc[i]._doc.imageUrls = imageUrls;
+    }
+  }
+  else {
+    const imageUrls = await getImageArraySrc(doc[i].images, doc[i]._id.toString());
+    doc.imageUrls = imageUrls;
+    doc._doc.imageUrls = imageUrls;
+  }
   next();
 });
 
