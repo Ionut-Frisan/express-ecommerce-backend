@@ -78,7 +78,6 @@ exports.getImageArraySrc = async (fileNames, id) => {
             Bucket: 'whynot-uploads',
             Key: fileName,
         };
-        totalCount++;
 
         const command = new GetObjectCommand(input);
         return getSignedUrl(client, command, { expiresIn: process.env.S3_SIGNED_URL_EXPIRE || 3600 });
