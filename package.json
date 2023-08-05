@@ -1,6 +1,6 @@
 {
   "name": "whynot-express-backend",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Whynot backend api",
   "main": "server.js",
   "scripts": {
