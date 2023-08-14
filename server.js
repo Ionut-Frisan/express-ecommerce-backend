@@ -13,6 +13,8 @@ const hpp = require("hpp");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
 
+require("dotenv").config({ path: path.resolve(__dirname, "./config/config.env")});
+
 // Route files
 const products = require("./routes/products");
 const categories = require("./routes/categories");
@@ -23,7 +25,6 @@ const favorites = require("./routes/favorites");
 const orders = require("./routes/orders");
 const webhooks = require("./routes/webhooks");
 
-require("dotenv").config({ path: "./config/config.env" });
 
 // Middleware
 const morgan = require("morgan");

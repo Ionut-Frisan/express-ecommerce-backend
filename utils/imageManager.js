@@ -5,7 +5,7 @@ const Cache = require( "node-cache" );
 const client = new S3Client({
     region: 'EU1',
     endpoint: 'https://gateway.storjshare.io',
-    credentials: { secretAccessKey: 'j35nwulpwojbmlt73weokn3g3qqrofsuddcbyyyzkp2auugwalcp6', accessKeyId: 'juarff3ypbgxgkf3rk6ojlhloimq' }
+    credentials: { secretAccessKey: process.env.S3_SECRET_KEY, accessKeyId: process.env.S3_ACCESS_KEY }
 });
 
 const cache = new Cache({ stdTTL: process.env.S3_SIGNED_URL_EXPIRE - 100 || 3600 })
