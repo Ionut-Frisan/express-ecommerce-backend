@@ -117,7 +117,6 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
  * @access  Public
  */
 exports.getProduct = asyncHandler(async (req, res, next) => {
-  // const product = await Product.findById(req.params.id);
   let product = await Product.find({ slug: req.params.id });
   if (!product) {
     return next(
@@ -161,7 +160,9 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
       for(let i=0;i <20; i++){
         name += chars.charAt(Math.floor(Math.random() * chars.length))
       }
-      return `product-images/photo_${product.id}_${name}${path.parse(file.name).ext}`
+      return process.env.NODE_ENV === 'development'
+          ? `dev/photo_${product.id}_${name}${path.parse(file.name).ext}`
+          : `product-images/photo_${product.id}_${name}${path.parse(file.name).ext}`;
     }
     if (
       file.mimetype.startsWith("image") &&

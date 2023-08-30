@@ -78,7 +78,6 @@ ProductSchema.pre("findOneAndUpdate", function (next) {
 
 ProductSchema.post("find", async (doc, next) => {
   if(Array.isArray(doc)) {
-    let newArr = [];
     for (let i=0; i < doc.length; i++) {
       const imageUrls = await getImageArraySrc(doc[i].images, doc[i]._id.toString());
       doc[i].imageUrls = imageUrls;

@@ -25,6 +25,8 @@ const favorites = require("./routes/favorites");
 const orders = require("./routes/orders");
 const webhooks = require("./routes/webhooks");
 
+const projectConfig = require("./package.json");
+const { version } = projectConfig || {};
 
 // Middleware
 const morgan = require("morgan");
@@ -42,7 +44,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Dev logging middleware
-if (process.env.NODE_ENV == "development") {
+if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
@@ -75,6 +77,7 @@ app.use(cors());
 app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader('Access-Control-Allow-Methods', '*');
+  res.setHeader('X-APP-VERSION', version);
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
